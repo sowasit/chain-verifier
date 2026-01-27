@@ -105,7 +105,8 @@ program
             console.log(chalk.gray('  For private chains, use --api-key or set SOWASIT_API_KEY environment variable\n'));
           }
 
-          console.log(chalk.gray(`Downloading chain from: ${apiUrl}`));
+          console.log(chalk.gray(`API URL: ${apiUrl}`));
+          console.log(chalk.gray(`Requesting: ${apiUrl}/chains/${chainId}/export${options.includeAnchors ? '?includeAnchors=true' : ''}\n`));
           
           chainData = await downloadChain(chainId, {
             apiKey,

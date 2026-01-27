@@ -139,7 +139,7 @@ const block = {
   data: {
     id: 1,
     chain_id: 'my-chain',
-    prev_hash: 'abc123...', // Chain hash (from metadata.chain_info.hash)
+    prev_hash: 'abc123...', // Chain hash (from chain.hash)
     created_at: '2025-01-27T12:00:00.000Z',
     content: 'Genesis Block',
   },
@@ -214,7 +214,7 @@ The verifier checks:
 
 1. **Hash integrity** - Each block's hash is recomputed using double SHA-256 and compared with the stored hash
 2. **Chain continuity** - Each block's `prev_hash` must match the previous block's `hash`
-3. **Genesis block** - The first block must have a `prev_hash` matching the chain hash (from `metadata.chain_info.hash`)
+3. **Genesis block** - The first block must have a `prev_hash` matching the chain hash (from `chain.hash`)
 4. **Block ordering** - Blocks are verified in sequential order by ID
 5. **Anchor verification** - If anchor blocks are included, verifies all referenced blocks exist and hashes match
 6. **Abuse status** - Warns if chain has been signaled/checked/confirmed for abuse (from `metadata.chain_info.abuse_status`)

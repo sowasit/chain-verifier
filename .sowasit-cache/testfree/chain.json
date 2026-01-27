@@ -1,0 +1,57 @@
+{
+  "chain_id": "testfree",
+  "metadata": {
+    "exported_at": "2026-01-27T13:47:29.216Z",
+    "total_blocks": 2,
+    "first_block_created": "2026-01-22T14:18:52.328Z",
+    "last_block_created": "2026-01-22T14:19:26.516Z",
+    "chain_info": {
+      "id": "testfree",
+      "tenant_id": "e6504b39-9c1e-41ca-b427-2e47a7632c12",
+      "name": "testfree",
+      "description": "pub créée par test free",
+      "visibility": "public",
+      "type": "data",
+      "anchoring_id": "public-anchoring",
+      "metadata": null,
+      "created_at": "2026-01-22T14:18:26.508Z",
+      "hash": "093d9885af8e86b4bb9681e66b16ab554bc0a47b4a1655ab0a6e94bcfd740cdd"
+    }
+  },
+  "blocks": [
+    {
+      "hash": "a0740ffe72ed8f9c92ac5dd29dff143463cafc3125d404ce0677b35602e8d6db",
+      "data": {
+        "id": 1,
+        "chain_id": "testfree",
+        "prev_hash": "093d9885af8e86b4bb9681e66b16ab554bc0a47b4a1655ab0a6e94bcfd740cdd",
+        "created_at": "2026-01-22T14:18:52.328Z",
+        "content": "premier bloc public"
+      },
+      "metadata": {
+        "block_type": "data",
+        "prevState": null,
+        "nextState": null,
+        "token_cost": 1,
+        "data_size_bytes": 181
+      }
+    },
+    {
+      "hash": "3d19c9c52053368a3e0f73e79a350e948c473d2c3cd797403a734ef41e94d279",
+      "data": {
+        "id": 2,
+        "chain_id": "testfree",
+        "prev_hash": "a0740ffe72ed8f9c92ac5dd29dff143463cafc3125d404ce0677b35602e8d6db",
+        "created_at": "2026-01-22T14:19:26.516Z",
+        "content": "j'ajoute un bloc c mm pas ma chaine"
+      },
+      "metadata": {
+        "block_type": "data",
+        "prevState": null,
+        "nextState": null,
+        "token_cost": 1,
+        "data_size_bytes": 197
+      }
+    }
+  ]
+}

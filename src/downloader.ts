@@ -60,7 +60,12 @@ export async function downloadChain(
     return data as ChainExport;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Download failed: ${error.message}`);
+      const errorMsg = [
+        `Download failed: ${error.message}`,
+        `URL: ${url.toString()}`,
+        error.cause ? `Cause: ${error.cause}` : null,
+      ].filter(Boolean).join('\n');
+      throw new Error(errorMsg);
     }
     throw error;
   }
@@ -122,7 +127,12 @@ export async function downloadAnchorBlocks(
     return data as AnchorBlocksExport;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Anchor blocks download failed: ${error.message}`);
+      const errorMsg = [
+        `Anchor blocks download failed: ${error.message}`,
+        `URL: ${url.toString()}`,
+        error.cause ? `Cause: ${error.cause}` : null,
+      ].filter(Boolean).join('\n');
+      throw new Error(errorMsg);
     }
     throw error;
   }

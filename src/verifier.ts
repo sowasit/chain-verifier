@@ -43,7 +43,10 @@ export function verifyBlock(
 
   // Compute and verify block hash
   if (block.hash && block.data) {
+    console.log(`Verifying block ID ${blockId} with data ${block.data}`);
+    console.log(`Expected hash: ${block.hash} for data: ${JSON.stringify(block.data)}, computing...`);
     const computedHash = computeBlockHash(block.data);
+    console.log(`Computed hash: ${computedHash}`);
     if (!verifyHash(computedHash, block.hash)) {
       errors.push(
         `Hash mismatch: computed ${computedHash}, expected ${block.hash}`

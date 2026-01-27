@@ -16,6 +16,7 @@ export function doubleSha256(data: string): string {
  */
 export function computeBlockHash(blockData: unknown): string {
   const serialized = stringify(blockData);
+  console.log(`Serialized block data for hashing: ${serialized}`);
   return doubleSha256(serialized);
 }
 
