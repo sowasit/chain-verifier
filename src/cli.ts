@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, writeFile, mkdir, access } from 'fs/promises';
+import { readFile, writeFile, mkdir, access, stat } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { Command } from 'commander';
@@ -8,7 +8,8 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import { verifyChain } from './verifier.js';
 import { downloadChain } from './downloader.js';
-import type { ChainExport } from './types.js';
+import { verifyChainStreaming, shouldUseStreaming } from './streaming-verifier.js';
+import type { ChainExport, ChainVerificationResult, BlockVerificationResult, AnchorBlockVerificationResult } from './types.js';
 
 const program = new Command();
 
@@ -48,11 +49,11 @@ program
         const cacheDir = join(process.cwd(), '.sowasit-cache', chainId);
         const cacheFile = join(cacheDir, 'chain.json');
 
-        console.log(chalk.gray(`Chain ID: ${chainId}`));
+        process.stdout.write(chalk.gray(`Chain ID: ${chainId}\n`));
         
         if (!options.forceDownload && existsSync(cacheFile)) {
           // Load from cache and download incrementally
-          console.log(chalk.gray(`Loading cached data from: ${cacheFile}`));
+          process.stdout.write(chalk.gray(`📦 Loading cache... `));
           const cachedContent = await readFile(cacheFile, 'utf-8');
           const cachedData: ChainExport = JSON.parse(cachedContent);
           
@@ -60,8 +61,8 @@ program
             ? Math.max(...cachedData.blocks.map(b => b.data.id))
             : 0;
 
-          console.log(chalk.gray(`Cached blocks: 1-${lastBlockId}`));
-          console.log(chalk.gray(`Checking for new blocks...`));
+          process.stdout.write(chalk.green(`${lastBlockId} blocks cached\n`));
+          process.stdout.write(chalk.gray(`🔄 Checking for updates... `));
 
           try {
             const newData = await downloadChain(chainId, {
@@ -72,7 +73,7 @@ program
             });
 
             if (newData.blocks.length > 0) {
-              console.log(chalk.green(`✓ Downloaded ${newData.blocks.length} new blocks`));
+              process.stdout.write(chalk.green(`+${newData.blocks.length} new blocks\n`));
               
               // Merge with cached data
               chainData = {
@@ -85,14 +86,14 @@ program
               // Update cache
               await mkdir(cacheDir, { recursive: true });
               await writeFile(cacheFile, JSON.stringify(chainData, null, 2));
-              console.log(chalk.gray(`Cache updated\n`));
+              process.stdout.write(chalk.gray(`💾 Cache updated\n\n`));
             } else {
-              console.log(chalk.gray(`No new blocks found\n`));
+              process.stdout.write(chalk.gray(`up to date\n\n`));
               chainData = cachedData;
             }
           } catch (error: any) {
             if (error.message.includes('404') || error.message.includes('403')) {
-              console.log(chalk.gray(`No new blocks available or access denied\n`));
+              process.stdout.write(chalk.gray(`no access\n\n`));
               chainData = cachedData;
             } else {
               throw error;
@@ -101,12 +102,11 @@ program
         } else {
           // Download full chain
           if (!apiKey) {
-            console.log(chalk.yellow('⚠ No API key provided - attempting to download as public chain'));
-            console.log(chalk.gray('  For private chains, use --api-key or set SOWASIT_API_KEY environment variable\n'));
+            process.stdout.write(chalk.yellow('⚠  No API key - attempting public access\n'));
+            process.stdout.write(chalk.gray('   For private chains, use --api-key or SOWASIT_API_KEY\n\n'));
           }
 
-          console.log(chalk.gray(`API URL: ${apiUrl}`));
-          console.log(chalk.gray(`Requesting: ${apiUrl}/chains/${chainId}/export${options.includeAnchors ? '?includeAnchors=true' : ''}\n`));
+          process.stdout.write(chalk.gray(`📡 Downloading from ${apiUrl}... `));
           
           chainData = await downloadChain(chainId, {
             apiKey,
@@ -114,37 +114,83 @@ program
             includeAnchors: options.includeAnchors,
           });
 
-          console.log(chalk.green(`✓ Downloaded ${chainData.blocks.length} blocks\n`));
+          process.stdout.write(chalk.green(`${chainData.blocks.length} blocks\n`));
 
           // Save to cache
           await mkdir(cacheDir, { recursive: true });
           await writeFile(cacheFile, JSON.stringify(chainData, null, 2));
-          console.log(chalk.gray(`Cached to: ${cacheFile}\n`));
+          process.stdout.write(chalk.gray(`💾 Cached to ${cacheFile}\n\n`));
         }
       }
 
-      console.log(chalk.gray(`Chain ID: ${chainData.chain_id}`));
-      console.log(chalk.gray(`Total blocks: ${chainData.blocks?.length || 0}\n`));
+      // Determine if we should use streaming
+      let result: ChainVerificationResult | undefined;
+      let useStreaming = false;
 
-      // Create progress bar
-      const progressBar = new cliProgress.SingleBar({
-        format: 'Verifying |' + chalk.cyan('{bar}') + '| {percentage}% | {value}/{total} blocks',
-        barCompleteChar: '\u2588',
-        barIncompleteChar: '\u2591',
-        hideCursor: true,
-      });
+      if (isFile) {
+        useStreaming = shouldUseStreaming(chainIdOrFile, 50);
+        
+        if (useStreaming) {
+          const fileStats = await stat(chainIdOrFile);
+          const sizeMB = (fileStats.size / (1024 * 1024)).toFixed(2);
+          console.log(chalk.yellow(`⚡ Large file detected (${sizeMB} MB) - using streaming mode\n`));
+          
+          // Streaming verification with progress
+          const progressBar = new cliProgress.SingleBar({
+            format: 'Verifying |' + chalk.cyan('{bar}') + '| {blocks} blocks | {mb} MB processed',
+            barCompleteChar: '\u2588',
+            barIncompleteChar: '\u2591',
+            hideCursor: true,
+          });
 
-      const totalBlocks = chainData.blocks?.length || 0;
-      progressBar.start(totalBlocks, 0);
+          progressBar.start(100, 0, { blocks: 0, mb: '0.00' });
 
-      // Verify chain (we'll update progress manually)
-      const result = verifyChain(chainData);
+          result = await verifyChainStreaming(chainIdOrFile, (stats) => {
+            const progress = Math.min(100, Math.floor((stats.bytesProcessed / fileStats.size) * 100));
+            const mb = (stats.bytesProcessed / (1024 * 1024)).toFixed(2);
+            progressBar.update(progress, {
+              blocks: stats.totalBlocks,
+              mb,
+            });
+          });
 
-      // Update progress to completion
-      progressBar.update(totalBlocks);
-      progressBar.stop();
+          progressBar.update(100, {
+            blocks: result.totalBlocks,
+            mb: sizeMB,
+          });
+          progressBar.stop();
+          console.log('');
+        }
+      }
 
-      console.log('');
+      if (!useStreaming && !result) {
+        console.log(chalk.gray(`Chain ID: ${chainData.chain_id}`));
+        console.log(chalk.gray(`Total blocks: ${chainData.blocks?.length || 0}\n`));
+
+        // Create progress bar
+        const progressBar = new cliProgress.SingleBar({
+          format: 'Verifying |' + chalk.cyan('{bar}') + '| {percentage}% | {value}/{total} blocks',
+          barCompleteChar: '\u2588',
+          barIncompleteChar: '\u2591',
+          hideCursor: true,
+        });
+
+        const totalBlocks = chainData.blocks?.length || 0;
+        progressBar.start(totalBlocks, 0);
+
+        // Verify chain
+        result = verifyChain(chainData);
+
+        // Update progress to completion
+        progressBar.update(totalBlocks);
+        progressBar.stop();
+
+        console.log('');
+      }
+
+      if (!result) {
+        throw new Error('Verification failed: no result generated');
+      }
 
       // Display results
       if (result.valid) {
@@ -165,7 +211,7 @@ program
       // Show errors
       if (result.errors.length > 0) {
         console.log(chalk.red.bold('Errors:'));
-        result.errors.forEach((error) => {
+        result.errors.forEach((error: string) => {
           console.log(chalk.red(`  ✗ ${error}`));
         });
         console.log('');
@@ -174,7 +220,7 @@ program
       // Show warnings
       if (result.warnings.length > 0) {
         console.log(chalk.yellow.bold('Warnings:'));
-        result.warnings.forEach((warning) => {
+        result.warnings.forEach((warning: string) => {
           console.log(chalk.yellow(`  ⚠ ${warning}`));
         });
         console.log('');
@@ -195,7 +241,7 @@ program
 
         if (av.errors.length > 0) {
           console.log(chalk.red.bold('Anchor Errors:'));
-          av.errors.forEach((error) => {
+          av.errors.forEach((error: string) => {
             console.log(chalk.red(`  ✗ ${error}`));
           });
           console.log('');
@@ -203,7 +249,7 @@ program
 
         if (av.warnings.length > 0) {
           console.log(chalk.yellow.bold('Anchor Warnings:'));
-          av.warnings.forEach((warning) => {
+          av.warnings.forEach((warning: string) => {
             console.log(chalk.yellow(`  ⚠ ${warning}`));
           });
           console.log('');
@@ -211,7 +257,7 @@ program
 
         if (options.verbose && av.anchorResults.length > 0) {
           console.log(chalk.bold('Anchor-by-anchor results:\n'));
-          av.anchorResults.forEach((anchorResult) => {
+          av.anchorResults.forEach((anchorResult: AnchorBlockVerificationResult) => {
             const status = anchorResult.valid ? chalk.green('✓') : chalk.red('✗');
             console.log(`${status} Anchor Block #${anchorResult.anchorBlockId} → References Block #${anchorResult.referencedBlockId}`);
             console.log(`  Expected hash: ${anchorResult.expectedHash.substring(0, 16)}...`);
@@ -220,12 +266,12 @@ program
             }
             
             if (anchorResult.errors.length > 0) {
-              anchorResult.errors.forEach((error) => {
+              anchorResult.errors.forEach((error: string) => {
                 console.log(chalk.red(`  ✗ ${error}`));
               });
             }
             if (anchorResult.warnings.length > 0) {
-              anchorResult.warnings.forEach((warning) => {
+              anchorResult.warnings.forEach((warning: string) => {
                 console.log(chalk.yellow(`  ⚠ ${warning}`));
               });
             }
@@ -237,18 +283,18 @@ program
       // Show detailed block results if verbose
       if (options.verbose) {
         console.log(chalk.bold('Block-by-block results:\n'));
-        result.blockResults.forEach((blockResult) => {
+        result.blockResults.forEach((blockResult: BlockVerificationResult) => {
           const status = blockResult.valid ? chalk.green('✓') : chalk.red('✗');
           console.log(`${status} Block #${blockResult.blockId} (index ${blockResult.blockIndex})`);
           console.log(`  Hash: ${blockResult.hash.substring(0, 16)}...`);
           
           if (blockResult.errors.length > 0) {
-            blockResult.errors.forEach((error) => {
+            blockResult.errors.forEach((error: string) => {
               console.log(chalk.red(`  ✗ ${error}`));
             });
           }
           if (blockResult.warnings.length > 0) {
-            blockResult.warnings.forEach((warning) => {
+            blockResult.warnings.forEach((warning: string) => {
               console.log(chalk.yellow(`  ⚠ ${warning}`));
             });
           }
