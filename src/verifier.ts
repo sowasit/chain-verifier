@@ -43,14 +43,20 @@ export function verifyBlock(
 
   // Compute and verify block hash
   if (block.hash && block.data) {
-    // console.log(`Verifying block ID ${blockId} with data ${block.data}`);
-    // console.log(`Expected hash: ${block.hash} for data: ${JSON.stringify(block.data)}, computing...`);
-    const computedHash = computeBlockHash(block.data);
-    // console.log(`Computed hash: ${computedHash}`);
-    if (!verifyHash(computedHash, block.hash)) {
-      errors.push(
-        `Hash mismatch: computed ${computedHash}, expected ${block.hash}`
+    const abuseStatus = (block.metadata as any)?.['abuse-status'];
+    const isReported = abuseStatus === 'signaled' || abuseStatus === 'confirmed';
+
+    if (isReported) {
+      warnings.push(
+        `Block ${blockId} hash verification skipped: content unavailable for legal reasons (status: ${abuseStatus})`
       );
+    } else {
+      const computedHash = computeBlockHash(block.data);
+      if (!verifyHash(computedHash, block.hash)) {
+        errors.push(
+          `Hash mismatch: computed ${computedHash}, expected ${block.hash}`
+        );
+      }
     }
   }
 
@@ -93,6 +99,7 @@ export function verifyChain(chainData: ChainExport): ChainVerificationResult {
   const blocks = chainData.blocks;
   let validBlocks = 0;
   let invalidBlocks = 0;
+  const unverifiedBlockIds: number[] = [];
 
   // Sort blocks by ID to ensure correct order
   const sortedBlocks = [...blocks].sort((a, b) => a.data.id - b.data.id);
@@ -126,7 +133,13 @@ export function verifyChain(chainData: ChainExport): ChainVerificationResult {
     const result = verifyBlock(block, prevHash);
     blockResults.push(result);
 
-    if (result.valid) {
+    const abuseStatus = (block.metadata as any)?.['abuse-status'];
+    const isReported = abuseStatus === 'signaled' || abuseStatus === 'confirmed';
+
+    if (isReported) {
+      unverifiedBlockIds.push(block.data.id);
+      validBlocks++; // Supposer blocs signalés comme valides as per roadmap
+    } else if (result.valid) {
       validBlocks++;
     } else {
       invalidBlocks++;
@@ -134,6 +147,12 @@ export function verifyChain(chainData: ChainExport): ChainVerificationResult {
 
     // Update prevHash for next iteration
     prevHash = block.hash;
+  }
+
+  if (unverifiedBlockIds.length > 0) {
+    warnings.push(
+      `${unverifiedBlockIds.length} blocks not verified (content unavailable for legal reasons)`
+    );
   }
 
   // Check abuse status (only warn if defined: signaled, checked, or confirmed)
@@ -167,6 +186,8 @@ export function verifyChain(chainData: ChainExport): ChainVerificationResult {
     totalBlocks: sortedBlocks.length,
     validBlocks,
     invalidBlocks,
+    unverifiedBlocks: unverifiedBlockIds.length,
+    unverifiedBlockIds,
     errors,
     warnings,
     blockResults,

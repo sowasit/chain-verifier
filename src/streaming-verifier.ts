@@ -8,6 +8,7 @@ export interface StreamingStats {
   totalBlocks: number;
   validBlocks: number;
   invalidBlocks: number;
+  unverifiedBlocks: number;
   bytesProcessed: number;
   errors: string[];
   warnings: string[];
@@ -21,12 +22,14 @@ export async function verifyChainStreaming(
     totalBlocks: 0,
     validBlocks: 0,
     invalidBlocks: 0,
+    unverifiedBlocks: 0,
     bytesProcessed: 0,
     errors: [],
     warnings: [],
   };
 
   const blockResults: BlockVerificationResult[] = [];
+  const unverifiedBlockIds: number[] = [];
   let prevHash: string | null = null;
   let chainHash: string | null = null;
 
@@ -83,7 +86,14 @@ export async function verifyChainStreaming(
       const result = verifyBlock(block as Block, prevHash);
       blockResults.push(result);
 
-      if (result.valid) {
+      const abuseStatus = (block.metadata as any)?.['abuse-status'];
+      const isReported = abuseStatus === 'signaled' || abuseStatus === 'confirmed';
+
+      if (isReported) {
+        unverifiedBlockIds.push((block as Block).data.id);
+        stats.unverifiedBlocks++;
+        stats.validBlocks++; // Supposer blocs signalés comme valides
+      } else if (result.valid) {
         stats.validBlocks++;
       } else {
         stats.invalidBlocks++;
@@ -101,6 +111,12 @@ export async function verifyChainStreaming(
       onProgress(stats);
     }
 
+    if (unverifiedBlockIds.length > 0) {
+      stats.warnings.push(
+        `${unverifiedBlockIds.length} blocks not verified (content unavailable for legal reasons)`
+      );
+    }
+
     const allValid = stats.invalidBlocks === 0 && stats.errors.length === 0;
 
     return {
@@ -108,6 +124,8 @@ export async function verifyChainStreaming(
       totalBlocks: stats.totalBlocks,
       validBlocks: stats.validBlocks,
       invalidBlocks: stats.invalidBlocks,
+      unverifiedBlocks: stats.unverifiedBlocks,
+      unverifiedBlockIds,
       errors: stats.errors,
       warnings: stats.warnings,
       blockResults,

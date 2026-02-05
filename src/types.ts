@@ -1,8 +1,14 @@
+export interface CreatedBy {
+  type: 'user' | 'api_key' | 'system';
+  id: string | null;
+}
+
 export interface BlockData {
   id: number;
   chain_id: string;
   prev_hash: string;
   created_at: string | Date;
+  created_by: CreatedBy;
   content?: unknown;
   [key: string]: unknown;
 }
@@ -43,6 +49,8 @@ export interface ChainVerificationResult {
   totalBlocks: number;
   validBlocks: number;
   invalidBlocks: number;
+  unverifiedBlocks?: number;
+  unverifiedBlockIds?: number[];
   errors: string[];
   warnings: string[];
   blockResults: BlockVerificationResult[];

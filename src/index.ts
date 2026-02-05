@@ -4,6 +4,7 @@ export { computeBlockHash, doubleSha256, verifyHash } from './crypto.js';
 export type {
   Block,
   BlockData,
+  CreatedBy,
   ChainExport,
   BlockVerificationResult,
   ChainVerificationResult,

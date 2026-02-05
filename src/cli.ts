@@ -205,6 +205,9 @@ program
       console.log(chalk.bold('Summary:'));
       console.log(`  Total blocks:   ${result.totalBlocks}`);
       console.log(`  Valid blocks:   ${chalk.green(result.validBlocks)}`);
+      if (result.unverifiedBlocks && result.unverifiedBlocks > 0) {
+        console.log(`  Unverified:     ${chalk.yellow(result.unverifiedBlocks)} (legal reasons)`);
+      }
       console.log(`  Invalid blocks: ${result.invalidBlocks > 0 ? chalk.red(result.invalidBlocks) : result.invalidBlocks}`);
       console.log(`  Verified at:    ${result.verifiedAt}\n`);
 
