@@ -47,7 +47,7 @@ npx @sowasit/chain-verifier verify my-private-chain --api-key te_xxxxx
 - `-o, --output <file>` - Save verification report to a file
 - `-v, --verbose` - Show detailed block-by-block results
 - `-k, --api-key <key>` - API key (or use `SOWASIT_API_KEY` env var). **Required only for private chains.**
-- `-u, --api-url <url>` - API URL (default: `https://api.sowasit.com`)
+- `-u, --api-url <url>` - API URL (default: `https://api.sowasit.io`)
 - `--force-download` - Force re-download, ignoring local cache
 - `--include-anchors` - Include anchor blocks for verification
 
@@ -84,7 +84,7 @@ npx @sowasit/chain-verifier download <chainId> --api-key YOUR_API_KEY
 
 **Options:**
 - `-k, --api-key <key>` - API key (or use `SOWASIT_API_KEY` env var). **Required only for private chains.**
-- `-u, --api-url <url>` - API URL (default: `https://api.sowasit.com`)
+- `-u, --api-url <url>` - API URL (default: `https://api.sowasit.io`)
 - `-o, --output <file>` - Output file (default: `<chainId>.json`)
 - `--from <index>` - Start block index (inclusive)
 - `--to <index>` - End block index (inclusive)
@@ -158,13 +158,13 @@ import { writeFile } from 'fs/promises';
 
 // Download public chain (no API key required)
 const publicChainData = await downloadChain('public-chain-id', {
-  apiUrl: 'https://api.sowasit.com',
+  apiUrl: 'https://api.sowasit.io',
 });
 
 // Download private chain (API key required)
 const privateChainData = await downloadChain('private-chain-id', {
   apiKey: 'te_xxxxx',
-  apiUrl: 'https://api.sowasit.com',
+  apiUrl: 'https://api.sowasit.io',
   from: 0,
   to: 100,
 });
@@ -367,13 +367,13 @@ MIT - See LICENSE file for details
 
 ## Links
 
-- [SoWasIt Website](https://sowasit.com)
-- [Documentation](https://docs.sowasit.com)
+- [SoWasIt Website](https://sowasit.io)
+- [Documentation](https://docs.sowasit.io)
 - [GitHub Repository](https://github.com/sowasit/chain-verifier)
 - [Report Issues](https://github.com/sowasit/chain-verifier/issues)
 
 ## Support
 
-- Email: support@sowasit.com
-- Documentation: https://docs.sowasit.com
+- Email: support@sowasit.io
+- Documentation: https://docs.sowasit.io
 - Community: https://discord.gg/sowasit

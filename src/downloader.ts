@@ -11,7 +11,7 @@ export async function downloadChain(
   options: DownloadOptions = {}
 ): Promise<ChainExport> {
   const {
-    apiUrl = 'https://api.sowasit.com',
+    apiUrl = 'https://api.sowasit.io',
     apiKey,
     from,
     to,
@@ -82,7 +82,7 @@ export async function downloadAnchorBlocks(
   options: DownloadAnchorOptions
 ): Promise<AnchorBlocksExport> {
   const {
-    apiUrl = 'https://api.sowasit.com',
+    apiUrl = 'https://api.sowasit.io',
     apiKey,
     contentChainId,
     contentTenantId,

@@ -26,7 +26,7 @@ program
   .option('-o, --output <file>', 'Output verification report to a file')
   .option('-v, --verbose', 'Show detailed block-by-block results')
   .option('-k, --api-key <key>', 'API key for downloading chains (or use SOWASIT_API_KEY env var). Required only for private chains.')
-  .option('-u, --api-url <url>', 'API URL (default: https://api.sowasit.com)')
+  .option('-u, --api-url <url>', 'API URL (default: https://api.sowasit.io)')
   .option('--force-download', 'Force re-download of entire chain, ignoring cache')
   .option('--include-anchors', 'Include anchor blocks when downloading')
   .action(async (chainIdOrFile: string, options: { output?: string; verbose?: boolean; apiKey?: string; apiUrl?: string; forceDownload?: boolean; includeAnchors?: boolean }) => {
@@ -45,7 +45,7 @@ program
         // Download chain
         const chainId = chainIdOrFile;
         const apiKey = options.apiKey || process.env.SOWASIT_API_KEY;
-        const apiUrl = options.apiUrl || 'https://api.sowasit.com';
+        const apiUrl = options.apiUrl || 'https://api.sowasit.io';
         const cacheDir = join(process.cwd(), '.sowasit-cache', chainId);
         const cacheFile = join(cacheDir, 'chain.json');
 
@@ -330,7 +330,7 @@ program
   .description('Download a chain from the SoWasIt API')
   .argument('<chainId>', 'The chain ID to download')
   .option('-k, --api-key <key>', 'API key for authentication (or set SOWASIT_API_KEY env var). Required only for private chains.')
-  .option('-u, --api-url <url>', 'API URL (default: https://api.sowasit.com)')
+  .option('-u, --api-url <url>', 'API URL (default: https://api.sowasit.io)')
   .option('-o, --output <file>', 'Output file path (default: <chainId>.json)')
   .option('--from <index>', 'Start block index (inclusive)')
   .option('--to <index>', 'End block index (inclusive)')
@@ -354,7 +354,7 @@ program
       }
 
       console.log(chalk.gray(`Chain ID: ${chainId}`));
-      console.log(chalk.gray(`API URL: ${options.apiUrl || 'https://api.sowasit.com'}\n`));
+      console.log(chalk.gray(`API URL: ${options.apiUrl || 'https://api.sowasit.io'}\n`));
 
       const downloadOptions = {
         apiUrl: options.apiUrl,
