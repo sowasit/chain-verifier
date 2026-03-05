@@ -1,6 +1,6 @@
 {
   "name": "@sowasit/chain-verifier",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cryptographic verification tool for SoWasIt blockchain chains - verify chain integrity offline",
   "type": "module",
   "main": "dist/index.js",
@@ -24,10 +24,10 @@
   ],
   "author": "SoWasIt",
   "license": "MIT",
-    "files": [
+  "files": [
     "dist",
     "!dist/__tests__",
-    "!.sowasit-cache", 
+    "!.sowasit-cache",
     "README.md",
     "LICENSE"
   ],
