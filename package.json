@@ -24,6 +24,13 @@
   ],
   "author": "SoWasIt",
   "license": "MIT",
+    "files": [
+    "dist",
+    "!dist/__tests__",
+    "!.sowasit-cache", 
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "chalk": "^5.3.0",
     "cli-progress": "^3.12.0",
