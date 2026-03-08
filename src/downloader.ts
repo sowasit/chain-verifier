@@ -36,7 +36,7 @@ export async function downloadChain(
   };
 
   if (apiKey) {
-    if (apiKey.startsWith('te_')) {
+    if (/^(live|stg|dev)_/.test(apiKey)) {
       headers['X-API-Key'] = apiKey;
     } else {
       headers['Authorization'] = `Bearer ${apiKey}`;
@@ -103,7 +103,7 @@ export async function downloadAnchorBlocks(
   };
 
   if (apiKey) {
-    if (apiKey.startsWith('te_')) {
+    if (/^(live|stg|dev)_/.test(apiKey)) {
       headers['X-API-Key'] = apiKey;
     } else {
       headers['Authorization'] = `Bearer ${apiKey}`;

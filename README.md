@@ -40,7 +40,7 @@ npx @sowasit/chain-verifier verify chain.json
 npx @sowasit/chain-verifier verify my-chain-id
 
 # Download and verify a private chain (requires API key)
-npx @sowasit/chain-verifier verify my-private-chain --api-key te_xxxxx
+npx @sowasit/chain-verifier verify my-private-chain --api-key live_xxxxx
 ```
 
 **Options:**
@@ -61,7 +61,7 @@ npx @sowasit/chain-verifier verify my-chain.json --verbose --output report.json
 npx @sowasit/chain-verifier verify public-chain-id
 
 # Verify private chain with API key
-npx @sowasit/chain-verifier verify private-chain-id --api-key te_xxxxx
+npx @sowasit/chain-verifier verify private-chain-id --api-key live_xxxxx
 
 # Force full re-download
 npx @sowasit/chain-verifier verify my-chain-id --force-download
@@ -97,13 +97,13 @@ npx @sowasit/chain-verifier download <chainId> --api-key YOUR_API_KEY
 npx @sowasit/chain-verifier download my-public-chain-id
 
 # Download private chain with API key
-npx @sowasit/chain-verifier download my-chain-id --api-key te_xxxxx
+npx @sowasit/chain-verifier download my-chain-id --api-key live_xxxxx
 
 # Download partial chain (blocks 100-200)
 npx @sowasit/chain-verifier download my-chain-id --from 100 --to 200
 
 # Use environment variable for API key
-export SOWASIT_API_KEY=te_xxxxx
+export SOWASIT_API_KEY=live_xxxxx
 npx @sowasit/chain-verifier download my-private-chain-id
 ```
 
@@ -163,7 +163,7 @@ const publicChainData = await downloadChain('public-chain-id', {
 
 // Download private chain (API key required)
 const privateChainData = await downloadChain('private-chain-id', {
-  apiKey: 'te_xxxxx',
+  apiKey: 'live_xxxxx',
   apiUrl: 'https://api.sowasit.io',
   from: 0,
   to: 100,
