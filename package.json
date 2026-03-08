@@ -1,6 +1,6 @@
 {
   "name": "@sowasit/chain-verifier",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Cryptographic verification tool for SoWasIt blockchain chains - verify chain integrity offline",
   "type": "module",
   "main": "dist/index.js",
