@@ -368,12 +368,12 @@ MIT - See LICENSE file for details
 ## Links
 
 - [SoWasIt Website](https://sowasit.io)
-- [Documentation](https://docs.sowasit.io)
+- [Documentation](https://sowasit.io/documentation)
 - [GitHub Repository](https://github.com/sowasit/chain-verifier)
 - [Report Issues](https://github.com/sowasit/chain-verifier/issues)
 
 ## Support
 
 - Email: support@sowasit.io
-- Documentation: https://docs.sowasit.io
+- Documentation: https://sowasit.io/documentation
 - Community: https://discord.gg/sowasit
